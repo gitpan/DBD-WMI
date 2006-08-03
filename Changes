@@ -1,0 +1,10 @@
+
+v0.02 20060801
+- added data_sources
+- added meta-tests
+- added $VERSION
+- added more documentation to DBD::WMI and Win32::WQL
+- added more sample programs
+
+v0.01 20060801
+- escaping from the mists
