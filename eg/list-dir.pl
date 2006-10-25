@@ -17,17 +17,13 @@ $path = quotemeta($path);
 
 # Quaduple quoting of backslashes is necessary!
 my $sth = $dbh->prepare(<<WQL);
-    SELECT Drive, Path, Name FROM CIM_Datafile
-    WHERE
-        Drive = '$drive'
-     AND Path  = '$path'
-     AND Extension = 'pl'
+    ASSOCIATORS OF {Win32_Directory.Name='C:\\WINNT'} 
+    WHERE ResultClass = CIM_DataFile
 WQL
 
 $sth->execute();
 while (defined (my $row = $sth->fetchrow_arrayref())) {
-    #my $ev = $row->[0];
-    print join "\t", @$row;
-    #print join "\t", $ev->Drive, $ev->Path, $ev->Name;
+    my $ev = $row->[0];
+    print join "\t", $ev->Drive, $ev->Path, $ev->Name;
     print "\n";
 }

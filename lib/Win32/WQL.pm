@@ -34,7 +34,7 @@ is a compatibility layer over this module.
 =cut
 
 use vars qw($VERSION);
-$VERSION = '0.02';
+$VERSION = '0.03';
 
 Win32::OLE->Option(Warn => 3);
 
