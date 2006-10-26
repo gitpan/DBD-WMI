@@ -6,7 +6,7 @@ use DBI;
 use vars qw($ATTRIBUTION $VERSION);
 
 $ATTRIBUTION = 'DBD::WMI by Max Maischein <dbd-wmi@corion.net>';
-$VERSION = '0.03';
+$VERSION = '0.04';
 
 =head1 NAME
 
@@ -20,18 +20,19 @@ through the DBI.
 =head1 SYNOPSIS
 
   use DBI;
-
   my $dbh = DBI->connect('dbi:WMI:');
+
   my $sth = $dbh->prepare(<<WQL);
-      SELECT * FROM Win32_Process
+    SELECT * FROM Win32_Process
   WQL
 
-  $sth->execute;
-  while (defined (my $row = $sth->fetchrow_arrayref())) {
-      # We get Win32::OLE objects back:
-      my $proc = $row->[0];
-      print join("\t", $proc->{Caption}, $proc->{ExecutablePath}),"\n";
-  };
+  $sth->execute();
+  while (my @row = $sth->fetchrow) {
+    my $proc = $row->[0];
+    print join "\t", $proc->{Caption}, $proc->{ExecutablePath} || "<system>";
+    # $proc->Terminate();
+    print "\n";
+  }
 
 The WMI
 allows you to query various tables ("namespaces"), like the filesystem,
@@ -138,16 +139,38 @@ sub prepare {
         },
     );
 
-    my @columns;
-    if ($statement =~ /^\s*SELECT \s*(.*?)\s+FROM\b/mi) {
-        @columns = map { s/^\s*//; s/\s*$//; $_ } split /,/, $1; # verrry simplicistic parsing
-    };
-    $sth->STORE('wmi_return_columns', \@columns);
+    my $columns = __PACKAGE__->parse_columns($statement);
+    $sth->STORE('wmi_return_columns', $columns);
 
     $sth->STORE('NUM_OF_PARAMS', ($statement =~ tr/?//));
 
     return $outer;
 }
+
+=head2 C<< DBD::WMI::db::parse_columns STATEMENT >>
+
+This routine parses out the requested columns
+from the WQL statement and returns an array reference
+with the names of the columns.
+
+Currently, this only works for C<SELECT> statements.
+All other statements get an implicit column
+of C<*>, meaning that the Win32::OLE objects
+will be returned.
+
+=cut
+
+sub parse_columns {
+    my ($dbh, $statement) = @_;
+    my @columns;
+    if ($statement =~ /^\s*SELECT \s*(.*?)\s+FROM\b/mi) {
+        @columns = map { s/^\s*//; s/\s*$//; $_ } split /,/, $1; # verrry simplicistic parsing
+    } else {
+        @columns = ('*');
+    };
+    
+    \@columns
+};
 
 sub STORE
 {
@@ -213,7 +236,7 @@ sub execute {
     #};
 
     my $iter = $sth->{wmi_sth}->execute(@$params);
-    
+
     #$sth->STORE('Active',1);
 
     $sth->{'wmi_data'} = $iter;
@@ -222,20 +245,12 @@ sub execute {
     $sth->{'wmi_rows'} || '0E0';
 }
 
-# Don't override
-#sub finish {
-#    my ($sth) = @_;
-#    if ($sth->FETCH('Active')) {
-#        $sth->STORE('Active',0);
-#    }
-#}
-
 sub fetchrow_arrayref
 {
     my ($sth) = @_;
     my $data = $sth->{wmi_data};
     my @row = $data->fetchrow();
-    
+
     if (! @row) {
         $sth->finish;
         return undef;
@@ -324,9 +339,9 @@ properties when columns are specified. These columns are then case sensitive.
   WQL
 
   $sth->execute;
-  while (defined (my $row = $sth->fetchrow_arrayref())) {
+  while (my @row = $sth->fetchrow) {
       # We get Win32::OLE objects back:
-      my $printer = $row->[0];
+      my $printer = $row[0];
       printf "Making %s the default printer\n", $printer->{Name};
       $printer->SetDefaultPrinter;
   };
@@ -351,21 +366,21 @@ properties when columns are specified. These columns are then case sensitive.
   WQL
 
   $sth->execute;
-  while (defined (my $row = $sth->fetchrow_arrayref())) {
-      # We get Win32::OLE objects back:
-      my $printer = $row->[0];
-      printf "Making %s the default printer\n", $printer->{Name};
+  while (my @row = $sth->fetchrow) {
+      my $printer = $row[0];
+      printf "Making %s the default printer on %s\n", $printer->{Name}, $machine;
       $printer->SetDefaultPrinter;
   };
-  
+
 =head2 Get method names of objects
 
-  SELECT * FROM Win32_Process
-  
   use Win32::OLE qw(in);
-  
+  ...
+
+  SELECT * FROM Win32_Process
+
   $sth->execute;
-  
+
   while (my @row = $sth->fetchrow) {
       for my $method (in $row[0]->Methods_) {
           print "Can call $method() on the object\n"
@@ -379,8 +394,6 @@ properties when columns are specified. These columns are then case sensitive.
 =item * Implement placeholders and proper interpolation of values
 
 =item * Need to implement DSN parameters for remote computers, credentials
-
-=item * Implement C<data_sources> (via a WMI query ...)
 
 =back
 

@@ -1,12 +1,7 @@
 eg/device-change.pl
 eg/file-find-wql.pl
-eg/ps.pl
 eg/dns-order.pl
-eg/list-dir.pl
-eg/ps-flat.pl
 eg/ps.pl
-eg/temperature.pl
-eg/temperature.pl
 lib/DBD/WMI.pm
 lib/Win32/WQL.pm
 Makefile.PL
@@ -18,5 +13,6 @@ t/99-pod.t
 t/99-todo.t
 t/99-unix-text.t
 t/99-versions.t
-Changes
 t/01-use.t
+t/02-column-parse.t
+Changes

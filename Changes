@@ -1,10 +1,16 @@
+v0.04 200610xx
+- Fixed bug in ASSOCIATORS OF query (and other queries) where a single '*' column
+  wasn't regarded as valid result
+
+v0.03 20061025
+- Fixed leaked $dbh
+- Added column remapping
+- First test added
 
 v0.02 20060801
 - added data_sources
 - added meta-tests
 - added $VERSION
-- added more documentation to DBD::WMI and Win32::WQL
-- added more sample programs
 
 v0.01 20060801
 - escaping from the mists
