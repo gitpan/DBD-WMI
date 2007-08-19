@@ -1,3 +1,6 @@
+v0.05 20070819
+- Fixed 99-versions.t, no code changes
+
 v0.04 200610xx
 - Fixed bug in ASSOCIATORS OF query (and other queries) where a single '*' column
   wasn't regarded as valid result
