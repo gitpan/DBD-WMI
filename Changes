@@ -1,3 +1,6 @@
+v0.06 20090116
+- Fixed Makefile.PL to list File::Accessor prerequisite, no code changes
+
 v0.05 20070819
 - Fixed 99-versions.t, no code changes
 
